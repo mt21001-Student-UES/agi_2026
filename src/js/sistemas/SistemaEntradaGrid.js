@@ -38,7 +38,7 @@ export default class SistemaEntradaGrid {
 
   update(deltaTime) {
     // Este sistema actualiza componentes basándose en eventos asíncronos del ratón.
-
+    
   }
 
   #obtenerFilaColumna(evento) {
@@ -85,10 +85,17 @@ export default class SistemaEntradaGrid {
 
     // Mover el cursor visual
     const cursor = this.escena.obtenerEntidadPorId(this.cursorId);
+    const casilla = entidadesCasilla.find(
+      (c) => c.casilla.fila === fila && c.casilla.columna === col,
+    );
     if (cursor && cursor.transform) {
-      cursor.transform.x = x_ndc;
-      cursor.transform.y = y_ndc;
-      cursor.transform.escala = 1; // visible
+      if (casilla && casilla.casilla.estado === "vacia") {
+        cursor.transform.x = x_ndc;
+        cursor.transform.y = y_ndc;
+        cursor.transform.escala = 1; // visible
+      } else {
+        cursor.transform.escala = 0; // ocultar si está ocupada
+      }
     }
   }
 
