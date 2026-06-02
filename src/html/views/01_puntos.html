@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Algoritmos Gráficos</title>
+    <link rel="stylesheet" type="text/css" href="../../css/canvasDisplay.css" />
+  </head>
+  <body>
+    <nav>
+      <a href="../../index.html">Regresar</a>
+    </nav>
+
+    <div class="layout">
+      <!-- Columna izquierda -->
+      <div class="controls">
+        <fieldset>
+          <legend>Agregar Coordenadas</legend>
+
+          <div class="form-row">
+            <label for="x">X</label>
+            <input type="number" id="x" placeholder="Coordenada X" />
+          </div>
+          <div class="form-row">
+            <label for="y">Y</label>
+            <input type="number" id="y" placeholder="Coordenada Y" />
+          </div>
+          <div class="form-row">
+            <label for="z">Z</label>
+            <input type="number" id="z" placeholder="Coordenada Z" />
+          </div>
+
+          <input type="button" value="Agregar Punto" id="btnAgregarPunto" />
+          <input type="button" value="Limpiar Canvas" id="btnLimpiarCanvas" />
+          <input type="button" value="Borrar Punto" id="btnBorrarPunto" />
+        </fieldset>
+
+        <fieldset>
+          <legend>Guardar o Obtener Lista</legend>
+          <input
+            type="text"
+            id="nombreLista"
+            placeholder="Nombre de la lista"
+          />
+          <input type="button" value="Guardar" id="btnGuardarLista" />
+          <input type="button" value="Obtener" id="btnObtenerLista" />
+          <input type="button" value="Borrar" id="btnBorrarLista" />
+        </fieldset>
+
+        <fieldset>
+          <legend>Cambiar Colores</legend>
+          <div class="form-row">
+            <label for="btnColorFondo">Color del Fondo</label>
+            <input type="color" id="btnColorFondo" value="#000000" />
+          </div>
+          <div class="form-row">
+            <label for="btnColorPunto">Color del Punto</label>
+            <input type="color" id="btnColorPunto" value="#ffffff" />
+          </div>
+          <div class="form-row">
+            <label for="tamañoPunto">Tamaño del Punto</label>
+            <input
+              type="range"
+              id="tamañoPunto"
+              min="0"
+              max="100"
+              step="0.01"
+              value="1"
+            />
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Tamaño del Canvas</legend>
+          <div class="form-row">
+            <label for="inputAncho">Ancho</label>
+            <input id="inputAncho" type="number" value="800" />
+          </div>
+          <div class="form-row">
+            <label for="inputAlto">Alto</label>
+            <input id="inputAlto" type="number" value="800" />
+          </div>
+          <button id="btnActualizar">Actualizar Canvas</button>
+        </fieldset>
+
+        <fieldset>
+          <button id="mostrarListas">Mostrar listas</button>
+          <div id="contenedorListas"></div>
+        </fieldset>
+      </div>
+
+      <!-- Columna derecha -->
+      <div class="canvas-container">
+        <canvas id="canvas" height="800" width="800"></canvas>
+      </div>
+    </div>
+
+    <script type="module" src="../../js/boundary/01_puntos.js"></script>
+  </body>
+</html>

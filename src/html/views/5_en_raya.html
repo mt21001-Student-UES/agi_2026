@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>5 en Raya (Amoeba)</title>
+  <link rel="stylesheet" type="text/css" media="screen" href="../../css/canvasDisplay.css" />
+  <style>
+    #panel-configuracion {
+      background: #1e1e2f;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border: 1px solid #333;
+      max-width: 400px;
+      width: 100%;
+    }
+    #panel-juego {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .status-bar {
+      width: 600px;
+      font-size: 1.2rem;
+      padding: 0.5rem 1rem;
+      background: #2a2a40;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #canvas {
+      border: 2px solid #555;
+      cursor: crosshair;
+    }
+    /* Botones de control durante la partida */
+    #barra-acciones {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .btn-juego {
+      padding: 0.45rem 1.1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-juego:hover { opacity: 0.8; }
+    #btnCancelar   { background: #e74c3c; color: #fff; }
+    #btnReiniciar  { background: #3498db; color: #fff; }
+
+    /* Panel de fin de juego (overlay sobre el canvas) */
+    #panel-resultado {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 10, 20, 0.85);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      border-radius: 4px;
+    }
+    #panel-resultado.visible { display: flex; }
+    #panel-resultado h2 {
+      font-size: 2rem;
+      color: #2ecc71;
+      text-shadow: 0 0 20px #2ecc71aa;
+    }
+    #panel-resultado .btn-resultado {
+      padding: 0.7rem 1.6rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    #btnJugarDeNuevo { background: #7c6aff; color: #fff; }
+    #btnVolverConfig { background: #555; color: #eee; }
+
+    /* Wrapper para el canvas + overlay */
+    #canvas-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+  </style>
+  <script type="module" src="../../js/boundary/5_en_raya.js" defer></script>
+</head>
+
+<body>
+  <nav>
+    <a href="../../index.html">Regresar</a>
+  </nav>
+
+  <div class="layout" style="flex-direction: column; align-items: center; padding-top: 2rem;">
+    <h1>5 en Raya (Amoeba)</h1>
+
+    <!-- ── PANEL DE CONFIGURACIÓN ─────────────────────────── -->
+    <div id="panel-configuracion" class="controls">
+      <h2>Configuración de la Partida</h2>
+
+      <fieldset>
+        <legend>Modo de Juego</legend>
+        <div class="form-row">
+          <label for="selectModo">Modo:</label>
+          <select id="selectModo">
+            <option value="PvP">Jugador vs Jugador</option>
+            <option value="PvE">Jugador vs Máquina</option>
+            <option value="EvE">Máquina vs Máquina (Demo)</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Tablero</legend>
+        <div class="form-row">
+          <label for="inputFilas">Filas (mín 5):</label>
+          <input id="inputFilas" type="number" min="5" max="30" value="5" />
+        </div>
+        <div class="form-row">
+          <label for="inputCols">Columnas (mín 5):</label>
+          <input id="inputCols" type="number" min="5" max="30" value="5" />
+        </div>
+      </fieldset>
+
+      <button id="btnIniciarJuego"
+        style="width:100%;padding:.8rem;margin-top:1rem;background:#7c6aff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:1.1rem;font-weight:700;">
+        Iniciar Partida
+      </button>
+    </div>
+
+    <!-- ── PANEL DE JUEGO ─────────────────────────────────── -->
+    <div id="panel-juego">
+      <!-- Barra de estado + botones -->
+      <div class="status-bar">
+        <span>Turno:&nbsp;<span id="spanTurno" style="color:#ff4757;font-weight:bold;">Jugador 1 (Equis)</span></span>
+        <div id="barra-acciones">
+          <button class="btn-juego" id="btnCancelar">✕ Cancelar</button>
+          <button class="btn-juego" id="btnReiniciar">↺ Reiniciar</button>
+        </div>
+      </div>
+
+      <!-- Canvas + overlay de resultado -->
+      <div id="canvas-wrapper">
+        <canvas id="canvas" width="600" height="600"></canvas>
+
+        <!-- Overlay de fin de partida -->
+        <div id="panel-resultado">
+          <h2 id="textoResultado">¡Jugador 1 ha ganado!</h2>
+          <div style="display:flex;gap:.8rem;">
+            <button class="btn-resultado" id="btnJugarDeNuevo">↺ Misma config</button>
+            <button class="btn-resultado" id="btnVolverConfig">⚙ Reconfigurar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Canvas auxiliar para el bitmap del cursor -->
+    <canvas id="canvasBitMap" width="600" height="600" style="display: none;"></canvas>
+  </div>
+</body>
+
+</html>

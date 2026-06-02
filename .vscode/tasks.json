@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "LanzarBrowserSync",
+      "type": "shell",
+      "command": "/home/jhonatan/.nvm/versions/node/v22.13.0/bin/node",
+      "args": [
+        "/home/jhonatan/.nvm/versions/node/v22.13.0/bin/browser-sync",
+        "start",
+        "--server",
+        "src",
+        "-f",
+        "src/**/*",
+        "--no-open"
+      ],
+      "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "TerminarBrowserSync",
+      "type": "shell",
+      "command": "task terminate",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "terminateAll"
+    }
+  ]
+}

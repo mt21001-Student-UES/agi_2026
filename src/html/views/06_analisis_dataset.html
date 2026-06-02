@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      type="module"
+      src="../../js/boundary/06_analisis_dataset.js"
+      defer
+    ></script>
+    <title>Document</title>
+  </head>
+  <body>
+    <nav>
+      <a href="../../index.html">Regresar</a>
+    </nav>
+    <div>
+      <fieldset>
+        <legend>Analizar Etiquetas</legend>
+        <label for="imagenesAnalisis">Selecciona imágenes:</label>
+        <select id="imagenesAnalisis" multiple>
+          <!-- aquí se llenan dinámicamente los nombres -->
+        </select>
+        <button id="btnAnalizar">Analizar</button>
+      </fieldset>
+
+      <!-- Canvas encima -->
+      <canvas id="canvas" width="600" height="400"></canvas>
+    </div>
+  </body>
+</html>

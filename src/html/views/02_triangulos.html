@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Algoritmos Gráficos</title>
+    <style>
+      /* Contenedor principal: dos columnas */
+      .layout {
+        display: flex;
+        flex-direction: row;
+        gap: 20px; /* espacio entre columnas */
+        align-items: flex-start;
+        padding-top: 10px;
+      }
+
+      /* Columna izquierda: fieldsets y botones */
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* espacio entre fieldsets */
+        max-width: 210px; /* ancho fijo para controles */
+      }
+
+      /* Columna derecha: canvas */
+      .canvas-container {
+        flex-grow: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <section>
+      <a href="../../index.html">Regresar</a>
+    </section>
+
+    <div class="layout">
+      <!-- Columna izquierda -->
+      <div class="controls">
+        <fieldset>
+          <legend>Punto 1</legend>
+          <label>
+            x1 <input type="number" id="x1" placeholder="Coordenada x1"/> 
+            y1 <input type="number" id="y1" placeholder="Coordenada y1"/> 
+            z1 <input type="number" id="z1" placeholder="Coordenada z1"/>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Punto 2</legend>
+          <label>
+            x2 <input type="number" id="x2" placeholder="Coordenada x2"/> 
+            y2 <input type="number" id="y2" placeholder="Coordenada y2"/> 
+            z2 <input type="number" id="z2" placeholder="Coordenada z2"/>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Punto 3</legend>
+          <label>
+            x3 <input type="number" id="x3" placeholder="Coordenada x3"/> 
+            y3 <input type="number" id="y3" placeholder="Coordenada y3"/> 
+            z3 <input type="number" id="z3" placeholder="Coordenada z3"/>
+          </label>
+        </fieldset>
+
+        <input type="button" value="Agregar Triángulo" id="btnAgregarTriangulo" />
+        <input type="button" value="Limpiar Canvas" id="btnLimpiarCanvas" />
+        <input type="button" value="Borrar Triángulo" id="btnBorrarTriangulo" />
+      </div>
+
+      <!-- Columna derecha -->
+      <div class="canvas-container">
+        <canvas id="canvas" height="800" width="800"></canvas>
+      </div>
+    </div>
+
+    <script type="module" src="./js/control/02_triangulo.js"></script>
+  </body>
+</html>

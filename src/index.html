@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Algoritmos Graficos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css" />
+    <!--script src="main.js"></script-->
+  </head>
+
+  <body>
+    <div class="layout">
+      <nav class="sidebar">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Escudo_de_la_Universidad_de_El_Salvador.svg"
+        />
+        <h2>Algoritmos Gráficos</h2>
+
+        <ul>
+          <li><a href="#">Dibujo Libre</a></li>
+          <li><a href="#">Algoritmos</a></li>
+          <li><a href="#">Acerca de</a></li>
+        </ul>
+      </nav>
+
+      <main class="content">
+        <h1>Proyectos</h1>
+
+        <div id="card-container" class="cards">
+          <!-- Aquí las tarjetas -->
+        </div>
+      </main>
+    </div>
+  </body>
+  <script>
+    // Crear tarjetas dinámicamente
+    const cardContainer = document.getElementById("card-container");
+    const cardList = [
+      {titulo:"Puntos", descripcion: "Algoritmo para dibujar puntos.", href:"./html/views/01_puntos.html", img:"img/puntos.png"},
+      {titulo:"Triángulos", descripcion: "Algoritmo para dibujar triángulos.", href:"./html/views/02_triangulos.html", img:"img/triangulos.png"},
+      {titulo:"Reloj", descripcion: "Reloj analógico con gráficos.", href:"./html/views/03_reloj.html", img:"img/reloj.png"},
+      {titulo:"Círculo DDA", descripcion: "Algoritmo DDA para círculos.", href:"./html/views/04_circulo.html", img:"img/circulo.png"},
+      {titulo:"Alphabeto", descripcion: "Letras usando círculos.", href:"./html/views/05_alphabeto.html", img:"img/alphabeto.png"},
+      {titulo:"Etiquetado de Imagenes", descripcion: "Etiquetado de imagenes para entrenar AI.", href:"./html/views/06_imagenAI.html", img:"img/entrenamientoAI/abuela.png"},
+      {titulo:"Analisis", descripcion: "Analisis del dataset.", href:"./html/views/06_analisis_dataset.html", img:"img/dataset_fondo.jpeg"},
+      {titulo:"5 en la Raya (Amoeba)", descripcion: "5 en la Raya juego", href:"./html/views/5_en_raya.html", img:"img/5_en_raya.png"},
+      {titulo:"ECS", descripcion: "Prueba de Arquitectura ECS", href:"./html/views/07_ecs_demo.html", img:"img/go.webp"}
+    ]
+    // Añadir tarjetas al DOM
+    cardList.forEach((card,index) => {
+      const {titulo, descripcion, href, img} = cardList[index];
+      const cardElement = document.createElement("a");
+      const cardImage = document.createElement("img");
+      const cardTitle = document.createElement("h3");
+      const cardDescription = document.createElement("p");
+      cardElement.setAttribute("class", "card");
+      cardElement.setAttribute("href", href);
+      cardImage.setAttribute("src", img);
+      cardTitle.textContent = titulo;
+      cardDescription.textContent = descripcion;
+      // Añadir eventos a las tarjetas
+      cardElement.addEventListener("click", () => {
+        const href = card.getAttribute("href");
+        if (href && href !== "#") {
+          window.location.href = href;
+        }
+      });
+      cardElement.appendChild(cardImage);
+      cardElement.appendChild(cardTitle);
+      cardElement.appendChild(cardDescription);
+      cardContainer.appendChild(cardElement);
+    });
+  </script>
+</html>

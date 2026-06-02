@@ -1,0 +1,59 @@
+/* Contenedor principal: dos columnas */
+.layout {
+  display: flex;
+  flex-direction: row;
+  gap: 20px; /* espacio entre columnas */
+  align-items: flex-start;
+  padding-top: 10px;
+}
+
+/* Columna izquierda: fieldsets y botones */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* espacio entre fieldsets */
+  max-width: 210px; /* ancho fijo para controles */
+  border: solid 1px black;
+  padding: 20px;
+}
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  row-gap: 5px;
+}
+
+#inputImagen {
+  display: block;   /* fuerza salto de línea */
+  width: 100%;      /* ocupa todo el ancho disponible */
+  box-sizing: border-box;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px; /* espacio entre label e input */
+}
+
+.form-row label {
+  flex: 0 0 auto; /* ocupa solo su contenido */
+  min-width: 60px; /* ancho fijo para alinear */
+}
+
+.form-row input {
+  flex: 1;
+  min-width: 60px; /* evita que se haga demasiado pequeño */
+  max-width: 100px; /* evita que se desborde */
+}
+
+/* Columna derecha (canvas) */
+.canvas-container {
+  flex-grow: 1; /* ocupa el espacio restante */
+  border: solid 1px black;
+  padding: 20px;
+  display: flex; /* convierte en contenedor flex */
+  justify-content: center; /* centra horizontalmente */
+  align-items: center; /* centra verticalmente */
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      type="module"
+      src="../../js/boundary/05_alphabeto.js"
+      defer
+    ></script>
+    <link rel="stylesheet" type="text/css" href="../../css/canvasDisplay.css" />
+    <title>Alphabeto</title>
+  </head>
+  <body>
+    <nav>
+      <a href="../../index.html">Regresar</a>
+    </nav>
+    <div class="layout">
+      <!-- Columna izquierda -->
+      <div class="controls">
+        <fieldset>
+          <legend>Ingrese el texto</legend>
+          <textarea id="inputTexto" placeholder="Texto a dibujar" rows="10" cols="10"></textarea>
+          <button id="btnTexto">Dibujar</button>
+        </fieldset>
+      </div>
+      <!-- Columna derecha -->
+      <div class="canvas-container">
+        <canvas id="canvas" height="800" width="800"></canvas>
+      </div>
+    </div>
+  </body>
+</html>
