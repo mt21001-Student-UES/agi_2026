@@ -15,11 +15,12 @@ export default class RenderComponent {
    * @param {string} modo         Shader a usar. Default: 'puntos'
    * @param {number} tamañoPunto  Tamaño en px del punto (solo modo 'puntos')
    * @param {number} orden        Orden de dibujado (0 = fondo, mayor = encima)
+   * @param {boolean} visible     Indica si la entidad es visible. Default: true
    */
-  constructor(modo = 'puntos', tamañoPunto = 5, orden = 0) {
-    this.modo        = modo;
+  constructor(modo = 'puntos', tamañoPunto = 5, orden = 0, visible = true) {
+    this.modo = modo;
     this.tamañoPunto = tamañoPunto;
-    this.orden       = orden;
-    this.visible     = true;  // false = SistemaRender lo omite sin destruirlo
+    this.orden = orden;
+    this.visible = visible;
   }
 }

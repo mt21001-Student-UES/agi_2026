@@ -37,7 +37,9 @@ export default class SistemaAnimacion {
         // Easing ease-out cuadrático: t*(2-t) — crece rápido y frena suave
         const t = anim.progreso;
         const easedT = t * (2 - t);
-        tf.escala = anim.escalaInicial + (anim.escalaFinal - anim.escalaInicial) * easedT;
+        tf.escalaX = anim.escalaInicial + (anim.escalaFinalX - anim.escalaInicial) * easedT;
+        tf.escalaY = anim.escalaInicial + (anim.escalaFinalY - anim.escalaInicial) * easedT;
+        tf.dirty = true;
       }
 
       // ── FASE: rebote (intermitente) ───────────────────────────────────────
@@ -46,7 +48,9 @@ export default class SistemaAnimacion {
 
         if (anim.reboteTimer >= anim.reboteDuracion) {
           // Rebote terminado: fijar escala y desactivar
-          tf.escala    = anim.escalaFinal;
+          tf.escalaX   = anim.escalaFinalX;
+          tf.escalaY   = anim.escalaFinalY;
+          tf.dirty    = true;
           anim.activa  = false;
           anim.fase    = 'completada';
         } else {
@@ -54,7 +58,9 @@ export default class SistemaAnimacion {
           const decay = 1 - (anim.reboteTimer / anim.reboteDuracion);
           const freq  = 12; // Hz de la oscilación
           const onda  = Math.sin(anim.reboteTimer * freq * Math.PI * 2);
-          tf.escala = anim.escalaFinal + anim.reboteAmplitud * onda * decay;
+          tf.escalaX = anim.escalaFinalX + anim.reboteAmplitud * onda * decay;
+          tf.escalaY = anim.escalaFinalY + anim.reboteAmplitud * onda * decay;
+          tf.dirty = true;
         }
       }
     }

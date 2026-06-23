@@ -9,7 +9,7 @@ export default class LetraX extends LetraInterface {
       tamaño: 1,
       mayuscula: true,
       color: [1, 1, 1],
-      algoritmoLinea: "bresenham",
+      algoritmoLinea: "Bresenham",
     },
   ) {
     super(id, posicion, opciones);
@@ -17,38 +17,41 @@ export default class LetraX extends LetraInterface {
   }
 
   #init() {
-    const h = this.posicion.x; // centro X
-    const k = this.posicion.y; // centro Y
-    const size = this.opciones.tamaño; // escala relativa al tamaño de la casilla
+    const size = this.opciones.tamaño; // tamaño en píxeles
 
+    // Centrado en (0,0) local
     if (this.opciones.mayuscula) {
       // Mayúscula
       const lineaIzquierda = new Linea(
         `${this.id}_lineaIzquierda`,
-        [h - size, k + size * 2, 0, h + size, k - size, 0],
+        [-size, size * 2, 0, size, -size, 0],
         this.opciones.color,
         this.opciones.algoritmoLinea,
+        2, // tamañoPunto
       );
       const lineaDerecha = new Linea(
         `${this.id}_lineaDerecha`,
-        [h + size, k + size * 2, 0, h - size, k - size, 0],
+        [size, size * 2, 0, -size, -size, 0],
         this.opciones.color,
         this.opciones.algoritmoLinea,
+        2,
       );
       this.partes.push(lineaIzquierda, lineaDerecha);
     } else {
       // Minúscula
       const lineaIzquierda = new Linea(
         `${this.id}_lineaIzquierda`,
-        [h - size, k + size, 0, h + size, k - size, 0],
+        [-size, size, 0, size, -size, 0],
         this.opciones.color,
         this.opciones.algoritmoLinea,
+        2,
       );
       const lineaDerecha = new Linea(
         `${this.id}_lineaDerecha`,
-        [h + size, k + size, 0, h - size, k - size, 0],
+        [size, size, 0, -size, -size, 0],
         this.opciones.color,
         this.opciones.algoritmoLinea,
+        2,
       );
       this.partes.push(lineaIzquierda, lineaDerecha);
     }

@@ -13,25 +13,33 @@ export default class SistemaEntradaGrid {
    * @param {number} cursorId
    */
   constructor(escena, canvas, filas, columnas, cursorId) {
-    this.escena = escena;
-    this.canvas = canvas;
-    this.filas = filas;
+    this.escena   = escena;
+    this.canvas   = canvas;
+    this.filas    = filas;
     this.columnas = columnas;
     this.cursorId = cursorId;
 
-    // Almacena la última celda clickeada para que el SistemaJuego la lea
+    // Última celda clickeada (leída y borrada por SistemaJuegoAmoeba)
     this.ultimaCeldaClickeada = null;
 
-    // Posición NDC del centro de la celda bajo el mouse (null = fuera del canvas)
-    // Otros sistemas (ej. SistemaJuegoAmoeba) la leen para mover el cursor de hover
-    this.casillaHoverNDC = null; // { x, y } | null
-    this.casillaHoverGrid = null; // { fila, col } | null
+    // Hover actual en coordenadas de grilla
+    this.casillaHoverGrid = null;  // { fila, col } | null
+    // Mantenido para compatibilidad con SistemaJuegoAmoeba (ya no se usa para NDC)
+    this.casillaHoverNDC  = null;
 
-    // Vincular eventos del DOM
-    this.canvas.addEventListener("mousemove", this.#onMouseMove.bind(this));
-    this.canvas.addEventListener("click", this.#onClick.bind(this));
+    // Offsets del tablero en píxeles (inyectados desde boundary)
+    // offsetX/Y = borde izquierdo/superior del tablero en px
+    // anchoCelda/altoCelda = tamaño de cada celda en px
+    // Si no se inyectan, se calculan dinámicamente a partir del tamaño del canvas
+    this.offsetX    = null;
+    this.offsetY    = null;
+    this.anchoCelda = null;
+    this.altoCelda  = null;
+
+    this.canvas.addEventListener("mousemove",  this.#onMouseMove.bind(this));
+    this.canvas.addEventListener("click",      this.#onClick.bind(this));
     this.canvas.addEventListener("mouseleave", () => {
-      this.casillaHoverNDC = null;
+      this.casillaHoverNDC  = null;
       this.casillaHoverGrid = null;
     });
   }
@@ -59,42 +67,49 @@ export default class SistemaEntradaGrid {
   #onMouseMove(evento) {
     const { fila, col } = this.#obtenerFilaColumna(evento);
 
-    // Fuera de límites → limpiar hover
     if (fila < 0 || fila >= this.filas || col < 0 || col >= this.columnas) {
-      this.casillaHoverNDC = null;
+      this.casillaHoverNDC  = null;
       this.casillaHoverGrid = null;
       return;
     }
 
-    // Calcular NDC del centro de la celda
-    const x_ndc = -1.0 + (col + 0.5) * (2.0 / this.columnas);
-    const y_ndc = 1.0 - (fila + 0.5) * (2.0 / this.filas);
-
-    this.casillaHoverNDC = { x: x_ndc, y: y_ndc };
     this.casillaHoverGrid = { fila, col };
 
-    // Actualizar estado de hover en los CasillaComponents
+    // Calcular el centro de la casilla en píxeles canvas
+    const aCelda = this.anchoCelda ?? (this.canvas.width  / this.columnas);
+    const hCelda = this.altoCelda  ?? (this.canvas.height / this.filas);
+    const offX   = this.offsetX ?? 0;
+    const offY   = this.offsetY ?? 0;
+    const cx = offX + (col  + 0.5) * aCelda;
+    const cy = offY + (fila + 0.5) * hCelda;
+
+    // Mantener NDC por compatibilidad (algunos sistemas pueden leerlo)
+    this.casillaHoverNDC = {
+      x: (cx / this.canvas.width)  * 2 - 1,
+      y: 1 - (cy / this.canvas.height) * 2,
+    };
+
+    // Actualizar estado hover en los CasillaComponents
     const entidadesCasilla = this.escena.consultarPorComponente("casilla");
     for (const entidad of entidadesCasilla) {
-      const casilla = entidad.casilla;
-      casilla.hover =
-        casilla.fila === fila &&
-        casilla.columna === col &&
-        casilla.estado === "vacia";
+      const c = entidad.casilla;
+      c.hover = (c.fila === fila && c.columna === col && c.estado === "vacia");
     }
 
-    // Mover el cursor visual
-    const cursor = this.escena.obtenerEntidadPorId(this.cursorId);
+    // Mover el cursor visual al centro de la casilla en píxeles
+    const cursor  = this.escena.obtenerEntidadPorId(this.cursorId);
     const casilla = entidadesCasilla.find(
-      (c) => c.casilla.fila === fila && c.casilla.columna === col,
+      (e) => e.casilla.fila === fila && e.casilla.columna === col,
     );
     if (cursor && cursor.transform) {
       if (casilla && casilla.casilla.estado === "vacia") {
-        cursor.transform.x = x_ndc;
-        cursor.transform.y = y_ndc;
-        cursor.transform.escala = 1; // visible
+        cursor.transform.x      = cx;
+        cursor.transform.y      = cy;
+        cursor.transform.escala = 1;   // visible
+        cursor.transform._dirty = true; // forzar recalculo de matriz
       } else {
-        cursor.transform.escala = 0; // ocultar si está ocupada
+        cursor.transform.escala = 0;   // oculto si está ocupada
+        cursor.transform._dirty = true;
       }
     }
   }

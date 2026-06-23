@@ -1,70 +1,91 @@
 import FiguraInterface from "./figuraInterface.js";
 import Linea from "./Linea.js";
 
+/**
+ * GridDDA — Tablero de juego rasterizado en espacio de píxeles local.
+ *
+ * Genera (filas+1)+(columnas+1) líneas DDA centradas en el origen (0,0).
+ * El TransformComponent posiciona el tablero en escena.
+ * SistemaRender aplica Mat3.proyeccionNDC para convertir a NDC.
+ */
 export default class GridDDA extends FiguraInterface {
-  constructor(id, filas, columnas, color = [1, 1, 1]) {
+  /**
+   * @param {string}   id
+   * @param {number}   filas
+   * @param {number}   columnas
+   * @param {number}   anchoPx   Ancho total del tablero en píxeles canvas
+   * @param {number}   altoPx    Alto total del tablero en píxeles canvas
+   * @param {number[]} [color]   [r, g, b]
+   */
+  constructor(id, filas, columnas, anchoPx, altoPx, color = [1, 1, 1]) {
     super(id);
-    this.filas = filas;
+    this.filas    = filas;
     this.columnas = columnas;
-    this.color = color;
-    this.anchoCelda = 2.0 / columnas; // ancho depende de columnas
-    this.altoCelda = 2.0 / filas; // alto depende de filas
+    this.anchoPx  = anchoPx;
+    this.altoPx   = altoPx;
+    this.color    = color;
+
+    // Tamaño de celda en píxeles (para que SistemaEntradaGrid los use)
+    this.anchoCelda = anchoPx / columnas;
+    this.altoCelda  = altoPx  / filas;
   }
 
   render() {
     const buffers = [];
+    const w = this.anchoPx;
+    const h = this.altoPx;
 
-    // Lineas horizontales (filas + 1)
-    const pasoY = 2.0 / this.filas;
+    // Extremos locales: centrado en (0,0)
+    const xMin = -w / 2;
+    const xMax =  w / 2;
+    const yMin = -h / 2;
+    const yMax =  h / 2;
+
+    // Líneas horizontales (filas + 1)
     for (let i = 0; i <= this.filas; i++) {
-      const y = 1.0 - i * pasoY; // De arriba (1.0) hacia abajo (-1.0)
-      const lineaH = new Linea(
+      const y = yMin + i * this.altoCelda;
+      const linea = new Linea(
         `${this.id}_h${i}`,
-        [-1.0, y, 0.0, 1.0, y, 0.0],
+        [xMin, y, 0, xMax, y, 0],
         this.color,
         "DDA",
+        2,   // tamañoPunto (separación entre puntos DDA)
       );
-      lineaH.render();
-      buffers.push(lineaH.getBuffer());
+      linea.render();
+      if (linea.getBuffer()) buffers.push(linea.getBuffer());
     }
 
-    // Lineas verticales (columnas + 1)
-    const pasoX = 2.0 / this.columnas;
+    // Líneas verticales (columnas + 1)
     for (let i = 0; i <= this.columnas; i++) {
-      const x = -1.0 + i * pasoX; // De izquierda (-1.0) a derecha (1.0)
-      const lineaV = new Linea(
+      const x = xMin + i * this.anchoCelda;
+      const linea = new Linea(
         `${this.id}_v${i}`,
-        [x, -1.0, 0.0, x, 1.0, 0.0],
+        [x, yMin, 0, x, yMax, 0],
         this.color,
         "DDA",
+        2,
       );
-      lineaV.render();
-      buffers.push(lineaV.getBuffer());
+      linea.render();
+      if (linea.getBuffer()) buffers.push(linea.getBuffer());
     }
 
-    // Concatenar todos los buffers en uno solo
-    let totalLength = 0;
-    for (const b of buffers) {
-      if (b) totalLength += b.length;
-    }
-
+    // Concatenar todos los buffers en uno
+    const totalLength = buffers.reduce((sum, b) => sum + b.length, 0);
     const bufferFinal = new Float32Array(totalLength);
     let offset = 0;
     for (const b of buffers) {
-      if (b) {
-        bufferFinal.set(b, offset);
-        offset += b.length;
-      }
+      bufferFinal.set(b, offset);
+      offset += b.length;
     }
-
     this.setBuffer(bufferFinal);
   }
 
   /**
-   * Obtiene las dimensiones de una casilla del grid, en coordenadas normalizadas.
-   * @returns {Array<number>} [anchoCelda, altoCelda]
+   * Tamaño de celda en píxeles.
+   * @returns {[number, number]} [anchoCelda, altoCelda]
    */
   get tamanoCelda() {
     return [this.anchoCelda, this.altoCelda];
   }
 }
+

@@ -119,6 +119,39 @@ export default class ModeloWebGL {
   }
 
   /**
+   * Dibuja puntos usando el shader 3D con una matriz Mat4 de modelo.
+   * La transformación se ejecuta EN LA GPU (uniform mat4 uMatrix).
+   *
+   * A diferencia de dibujarPuntos(), los vértices llegan en coordenadas
+   * locales/mundo y la multiplicación por la matriz de modelo+proyección
+   * se hace en el vertex shader.
+   *
+   * @param {Float32Array|number[]} data          Formato: [x,y,z, r,g,b, ...]
+   * @param {Float32Array}          matrizUniform  Mat4 en column-major (16 floats)
+   * @param {number}                [tamañoPunto=5]
+   */
+  dibujarPuntos3D(data, matrizUniform, tamañoPunto = 5) {
+    if (!data?.length) return;
+    const gl = this.#gl;
+    const programa = this.#activarPrograma("puntos3d");
+    const buffer = this.#buffers.get("puntos3d");
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.#aFloat32(data), gl.DYNAMIC_DRAW);
+
+    this.#bindAtributosXYZRGB(programa);
+
+    gl.uniform1f(gl.getUniformLocation(programa, "uPointSize"), tamañoPunto);
+    gl.uniformMatrix4fv(
+      gl.getUniformLocation(programa, "uMatrix"),
+      false,
+      matrizUniform,
+    );
+
+    gl.drawArrays(gl.POINTS, 0, data.length / 6);
+  }
+
+  /**
    * Dibuja líneas nativas de WebGL (sin algoritmo de rasterización).
    * Útil para: grids de depuración, ejes de coordenadas, wireframes.
    * Cada par consecutivo de vértices forma una línea independiente.
@@ -300,15 +333,17 @@ export default class ModeloWebGL {
       this.#compilar(vp.threePointShader, fp.theFragmentShader),
     );
 
+    // Programa 3D: puntos con transformación Mat4 en GPU
+    this.#programas.set(
+      "puntos3d",
+      this.#compilar(vp.threeDShader, fp.theFragmentShader),
+    );
+
     // Programa de textura: solo para el quad de fondo
     this.#programas.set(
       "textura",
       this.#compilar(vp.textureBackgroundShader, fp.textureBackgroundShader),
     );
-
-    // Aquí se añadirán futuros shaders:
-    // this.#programas.set('particulas', this.#compilar(vp.particulas, fp.particulas));
-    // this.#programas.set('phong',      this.#compilar(vp.phong,      fp.phong));
   }
 
   /** Crea los buffers reutilizables (uno por tipo de primitiva) */
@@ -317,6 +352,7 @@ export default class ModeloWebGL {
 
     // Buffers de datos variables (DYNAMIC_DRAW → se reescriben cada frame)
     this.#buffers.set("puntos", gl.createBuffer());
+    this.#buffers.set("puntos3d", gl.createBuffer());
     this.#buffers.set("lineas", gl.createBuffer());
     this.#buffers.set("triangulos", gl.createBuffer());
 
@@ -453,5 +489,10 @@ export default class ModeloWebGL {
   /** Garantiza Float32Array para no crear nuevas instancias si ya lo es */
   #aFloat32(data) {
     return data instanceof Float32Array ? data : new Float32Array(data);
+  }
+
+  // GETTERS
+  get canvas () {
+    return this.#canvas;
   }
 }

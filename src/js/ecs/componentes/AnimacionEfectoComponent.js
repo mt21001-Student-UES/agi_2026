@@ -15,12 +15,14 @@ export default class AnimacionEfectoComponent {
   /**
    * @param {number} duracion        Duración total en segundos (default 0.35s)
    * @param {number} escalaInicial   Escala al iniciar (0 = invisible)
-   * @param {number} escalaFinal     Escala objetivo (1 = tamaño completo)
+   * @param {number} escalaFinalX    Escala X objetivo (1 = tamaño completo)
+   * @param {number} escalaFinalY    Escala Y objetivo (por defecto igual a X)
    */
-  constructor(duracion = 0.35, escalaInicial = 0, escalaFinal = 1) {
+  constructor(duracion = 0.35, escalaInicial = 0, escalaFinalX = 1, escalaFinalY = null) {
     this.duracion      = duracion;
     this.escalaInicial = escalaInicial;
-    this.escalaFinal   = escalaFinal;
+    this.escalaFinalX  = escalaFinalX;
+    this.escalaFinalY  = escalaFinalY ?? escalaFinalX;
 
     this.progreso  = 0;   // 0.0 → 1.0
     this.activa    = true; // false = animación terminada, sin coste

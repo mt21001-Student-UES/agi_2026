@@ -1,75 +1,47 @@
 /**
- * Algoritmo DDA adaptado para coordenadas normalizadas y canvas dinámico.
+ * Algoritmo DDA — Espacio de píxeles local.
  *
- * @param {number} x0 - Coordenada X inicial (normalizada entre 0 y 1).
- * @param {number} y0 - Coordenada Y inicial (normalizada entre 0 y 1).
- * @param {number} x1 - Coordenada X final (normalizada entre 0 y 1).
- * @param {number} y1 - Coordenada Y final (normalizada entre 0 y 1).
- * @param {number} canvasAncho - Ancho actual del canvas en píxeles.
- * @param {number} canvasAlto - Alto actual del canvas en píxeles.
- * @param {number} tamañoPunto - Tamaño de cada punto en píxeles (diámetro aproximado).
- * @param {Array<number>} color - Color en formato [r, g, b], valores entre 0 y 1.
- * @returns {Array<number>} - Lista de vértices con formato [x, y, z, r, g, b].
+ * Genera los puntos de una línea entre (x0,y0) y (x1,y1) en coordenadas
+ * de PÍXELES (no NDC). SistemaRender aplica Mat3.proyeccionNDC al final.
  *
- * - Se normalizan las coordenadas (0–1) y luego se escalan al tamaño del canvas.
- * - El número de pasos se calcula como la distancia máxima en píxeles / tamaño del punto.
- * - Esto asegura que no haya huecos entre puntos al escalar el canvas.
+ * @param {number} x0          Coordenada X inicial en píxeles
+ * @param {number} y0          Coordenada Y inicial en píxeles
+ * @param {number} x1          Coordenada X final en píxeles
+ * @param {number} y1          Coordenada Y final en píxeles
+ * @param {number} tamañoPunto Separación entre puntos (≈ tamaño del punto WebGL)
+ * @returns {number[]} Lista plana de pares [x, y] en píxeles
  */
-export default function lineaDDA(
-  x0,
-  y0,
-  x1,
-  y1,
-  canvasAncho,
-  canvasAlto,
-  tamañoPunto = 1
-) {
+export default function lineaDDA(x0, y0, x1, y1, tamañoPunto = 1) {
   if (
     typeof x0 !== "number" ||
     typeof y0 !== "number" ||
     typeof x1 !== "number" ||
     typeof y1 !== "number"
   ) {
-    console.warn("Coordenadas inválidas: ", x0, y0, x1, y1);
-    return;
+    console.warn("[lineaDDA] Coordenadas inválidas:", x0, y0, x1, y1);
+    return [];
   }
 
   const puntos = [];
+  const dx = x1 - x0;
+  const dy = y1 - y0;
 
-  // Escalar coordenadas normalizadas al tamaño real del canvas
-  const x0_px = x0 * canvasAncho;
-  const y0_px = y0 * canvasAlto;
-  const x1_px = x1 * canvasAncho;
-  const y1_px = y1 * canvasAlto;
-
-  const dx = x1_px - x0_px;
-  const dy = y1_px - y0_px;
-
-  // Distancia euclidiana en píxeles
+  // Nº de pasos proporcional a la distancia euclidiana en px / tamaño del punto
   const distancia = Math.sqrt(dx * dx + dy * dy);
-
-  // Número de pasos: distancia / tamaño del punto
-  // Esto asegura que cada punto esté separado aproximadamente por "tamañoPunto"
   const pasos = Math.max(1, Math.ceil(distancia / tamañoPunto));
 
-  // Incrementos por paso
   const xInc = dx / pasos;
   const yInc = dy / pasos;
 
-  let x = x0_px;
-  let y = y0_px;
+  let x = x0;
+  let y = y0;
 
   for (let i = 0; i <= pasos; i++) {
-    // Normalizar de nuevo a [0,1] para mantener independencia del canvas
-    const xNorm = x / canvasAncho;
-    const yNorm = y / canvasAlto;
-
-    puntos.push(xNorm, yNorm);
-
+    puntos.push(x, y);
     x += xInc;
     y += yInc;
   }
 
-  //console.log("Puntos de la linea: ", puntos);
   return puntos;
 }
+

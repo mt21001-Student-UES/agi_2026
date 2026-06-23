@@ -2,7 +2,7 @@ import FiguraInterface from "./figuraInterface.js";
 import lineaBresenham from "../algoritmos/lineaBresenham.js";
 import lineaDDA from "../algoritmos/lineaDDA.js";
 import rellenoPorFrontera from "../algoritmos/rellenoPorFrontera.js";
-import rellenoPorInundacion from "../algoritmos/rellenoPorInundacion.js";
+import floodFill from "../algoritmos/rellenoPorInundacion.js";
 
 export default class Cuadrado extends FiguraInterface {
   #canvas;
@@ -27,7 +27,6 @@ export default class Cuadrado extends FiguraInterface {
     relleno = false,
     algoritmoRelleno = null,
     colorFrontera = [0, 0, 0],
-    ctx2D = null,
   ) {
     super(id);
     this.#x0 = x0;
@@ -39,10 +38,7 @@ export default class Cuadrado extends FiguraInterface {
     this.#color = color;
     this.#relleno = relleno;
     this.algoritmoRelleno = algoritmoRelleno;
-    this.#ctx2D = ctx2D;
     this.#colorFrontera = colorFrontera;
-    //console.log("ctx2D", ctx2D);
-    //this.draw2D(ctx2D);
   }
 
   // Devuelve los lados como pares de vértices
@@ -79,71 +75,53 @@ export default class Cuadrado extends FiguraInterface {
   }
 
   render() {
-    const color = this.#color;
     const puntosCuadrado = [];
 
+    // 1. Crear matriz interna
+    const ancho = Math.max(1, Math.round(Math.abs(this.#x1 - this.#x0)));
+    const alto = Math.max(1, Math.round(Math.abs(this.#y1 - this.#y0)));
+    const matriz = new Uint8Array(ancho * alto);
+
+    // 2. Dibujar aristas en la matriz
+    const lados = this.getLados();
+
     //console.log(this.getLados());
-    this.getLados().forEach(([p0, p1]) => {
+    lados.forEach(([p0, p1]) => {
       const puntosLados = [];
       if (this.algoritmo === "lineaDDA") {
         //console.log("Usando DDA para: ", p0, p1);
-        puntosLados.push(
-          ...lineaDDA(p0[0], p0[1], p1[0], p1[1], this.ancho, this.alto),
-        );
+        puntosLados.push(...lineaDDA(p0[0], p0[1], p1[0], p1[1], 1));
       } else {
         //console.log("Usando Bresenham para: ", p0, p1);
-        puntosLados.push(
-          ...lineaBresenham(p0[0], p0[1], p1[0], p1[1], this.ancho, this.alto),
-        );
+        puntosLados.push(...lineaBresenham(p0[0], p0[1], p1[0], p1[1]));
       }
       for (let i = 0; i < puntosLados.length; i += 2) {
         const x = puntosLados[i];
         const y = puntosLados[i + 1];
-        puntosCuadrado.push(...[x, y, 0, color[0], color[1], color[2]]);
+        puntosCuadrado.push(...[x, y, 0, ...this.#color]);
       }
     });
 
-    /**
-    if (this.#relleno && this.#ctx2D) {
-      const cen = this.centro;
-      console.log("ctx2D", this.#ctx2D);
-      // Implementar algoritmo de relleno de polígonos
-      let puntosRelleno = [];
-      //puntosCuadrado.push(...[cen[0], cen[1], 0, color[0], color[1], color[2]]);
-      if (this.algoritmoRelleno === "inundacion") {
-        puntosRelleno = rellenoPorInundacion(
-          this.#ctx2D,
-          cen[0],
-          cen[1],
-          color,
-        );
-      } else {
-        console.log("Usando Relleno Por Frontera para: ", this.#x0, this.#y0);
-        puntosRelleno = rellenoPorFrontera(
-          this.#ctx2D,
-          cen[0],
-          cen[1],
-          color, // color que quiero para el relleno
-          this.#colorFrontera, // Negro por defecto, el color de la frontera
-        );
-      }
+    // 3. Flood fill si se pide relleno
+    if (this.#relleno) {
+      const cx = Math.floor(ancho / 2);
+      const cy = Math.floor(alto / 2);
+      floodFill(matriz, cx, cy, ancho, alto, 1, 2);
 
-      console.log("Puntos de relleno: ", puntosRelleno);
-      for (let i = 0; i < puntosRelleno.length; i += 2) {
-        const x = puntosRelleno[i];
-        const y = puntosRelleno[i + 1];
-        puntosCuadrado.push(...[x, y, 0, color[0], color[1], color[2]]);
+      // 4. Extraer puntos rellenados
+      for (let y = 0; y < alto; y++) {
+        for (let x = 0; x < ancho; x++) {
+          if (matriz[y * ancho + x] === 2) {
+            puntosCuadrado.push(
+              this.#x0 + x,
+              this.#y0 + y,
+              0,
+              ...this.#color,
+            );
+          }
+        }
       }
-    }
-     */
-
-    // Añadir puntos de relleno si existen
-    if (this.puntosRelleno && this.puntosRelleno.length > 0) {
-      for (let i = 0; i < this.puntosRelleno.length; i += 2) {
-        const x = this.puntosRelleno[i];
-        const y = this.puntosRelleno[i + 1];
-        puntosCuadrado.push(x, y, 0.1, color[0], color[1], color[2]);
-      }
+      //console.warn("releno hecho");
     }
 
     //console.log("Puntos del cuadrado: ", puntosLados);
@@ -182,6 +160,11 @@ export default class Cuadrado extends FiguraInterface {
   }
 
   toPixel(nx, ny, width, height) {
+    if (Math.abs(nx) > 1.1 || Math.abs(ny) > 1.1) {
+      // Si el valor es mayor a 1, asumimos que ya está en píxeles locales
+      // centrados en el origen, por lo que lo trasladamos al sistema 2D (0,0 arriba a la izquierda).
+      return [nx + width / 2, ny + height / 2];
+    }
     const px = ((nx + 1) / 2) * width;
     const py = ((1 - ny) / 2) * height; // inversión de Y
     return [px, py];
@@ -229,6 +212,12 @@ export default class Cuadrado extends FiguraInterface {
       false,
     );
 
-    this.puntosRelleno = puntosRelleno;
+    this.puntosRelleno = [];
+    for (let i = 0; i < puntosRelleno.length; i += 2) {
+      // Transformar de vuelta a coordenadas locales centradas (ya que el buffer se multiplica luego por el TransformMatrix)
+      const lx = puntosRelleno[i] - ctx2D.canvas.width / 2;
+      const ly = puntosRelleno[i + 1] - ctx2D.canvas.height / 2;
+      this.puntosRelleno.push(lx, ly);
+    }
   }
 }

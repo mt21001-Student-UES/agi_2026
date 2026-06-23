@@ -16,6 +16,23 @@ class VertexShaderProvider {
       }
       `;
   }
+
+  get threeDShader() {
+    return `
+      attribute vec3 coordenadas;   // x, y, z
+      attribute vec3 color;         // r, g, b
+      uniform float uPointSize;
+      uniform mat4 uMatrix;         // matriz 4x4 (proyección × modelo)
+      
+      varying vec3 vColor;
+
+      void main(void) {
+          gl_PointSize = uPointSize;
+          gl_Position = uMatrix * vec4(coordenadas, 1.0);
+          vColor = color;
+      }
+      `;
+  }
   
   // Para quad con textura de fondo
   get textureBackgroundShader() {

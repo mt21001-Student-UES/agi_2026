@@ -3,9 +3,6 @@ import Escena from "../core/Escena.js";
 import ModeloWebGL from "../graficos/ModeloWebGL.js";
 import SistemaRender from "../sistemas/SistemaRender.js";
 import SistemaAnimacion from "../sistemas/SistemaAnimacion.js";
-import SistemaJuegoAmoeba from "../sistemas/SistemaJuegoAmoeba.js";
-import SistemaEntradaGrid from "../sistemas/SistemaEntradaGrid.js";
-import GridFactory from "../ecs/factories/GridFactory.js";
 import {
   EstadoJuegoComponent,
   TransformComponent,
@@ -13,6 +10,11 @@ import {
 } from "../ecs/Componentes.js";
 import GeometriaComponent from "../ecs/componentes/GeometriaComponent.js";
 import Cuadrado from "../graficos/figuras/Cuadrado.js";
+
+// Importaremos los nuevos sistemas y fábricas 3D que crearemos
+import Tablero3DFactory from "../ecs/factories/Tablero3DFactory.js";
+import SistemaEntrada3D from "../sistemas/SistemaEntrada3D.js";
+import SistemaJuego3D from "../sistemas/SistemaJuego3D.js";
 
 // ── Elementos del DOM ────────────────────────────────────────────────────────
 const uiConfig = document.getElementById("panel-configuracion");
@@ -24,12 +26,11 @@ const btnCancelar = document.getElementById("btnCancelar");
 const btnReiniciar = document.getElementById("btnReiniciar");
 const btnJugarDeNuevo = document.getElementById("btnJugarDeNuevo");
 const btnVolverConfig = document.getElementById("btnVolverConfig");
-const canvasGL = document.getElementById("canvas");
-const canvasBitMap = document.getElementById("canvasBitMap");
+const canvas = document.getElementById("canvas");
 const spanTurno = document.getElementById("spanTurno");
 
-// ── Estado de configuración (persistido para reiniciar) ──────────────────────
-let configActual = { modo: "PvP", filas: 15, columnas: 15 };
+// ── Estado de configuración ──────────────────────────────────────────────────
+let configActual = { modo: "PvP", filas: 3, columnas: 3 }; // El 3D suele ser 3x3x3
 let motor;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -67,13 +68,10 @@ function detenerMotor() {
 
 btnStart.addEventListener("click", () => {
   const modo = document.getElementById("selectModo").value;
-  const filas = parseInt(document.getElementById("inputFilas").value, 10);
-  const columnas = parseInt(document.getElementById("inputCols").value, 10);
+  // Para el 3 en raya 3D, forzaremos 3x3x3
+  const filas = 3;
+  const columnas = 3;
 
-  if (filas < 5 || columnas < 5) {
-    alert("El tablero debe ser de al menos 5×5");
-    return;
-  }
   configActual = { modo, filas, columnas };
   mostrarJuego();
   iniciarJuego(modo, filas, columnas);
@@ -95,11 +93,7 @@ btnJugarDeNuevo.addEventListener("click", () => {
   detenerMotor();
   const { modo, filas, columnas } = configActual;
   mostrarJuego();
-  // Esperar que se detenga el motor y reiniciar
-  
-  setTimeout(() => {
-    iniciarJuego(modo, filas, columnas);
-  }, 1000);
+  iniciarJuego(modo, filas, columnas);
 });
 
 btnVolverConfig.addEventListener("click", () => {
@@ -108,137 +102,123 @@ btnVolverConfig.addEventListener("click", () => {
 });
 
 document.addEventListener("juegoTerminado", (e) => {
-
   mostrarResultado(e.detail?.ganador ?? null);
-  setTimeout(() => {
-    detenerMotor();
-  }, 1000);
+  detenerMotor();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Core de inicialización
+//  Core de inicialización del Juego 3D
 // ─────────────────────────────────────────────────────────────────────────────
 
 function iniciarJuego(modo, filas, columnas) {
-  console.log(`[Amoeba] Init: Modo=${modo} Grid=${filas}×${columnas}`);
+  console.log(
+    `[3D en Raya] Init: Modo=${modo} Grid=${filas}x${columnas}x3 niveles`,
+  );
 
   spanTurno.textContent = "Jugador 1 (Equis)";
   spanTurno.style.color = "#ff4757";
 
-  // ── 1. WebGL y canvas 2D (para relleno de hover) ─────────────────────────
-  const webgl = new ModeloWebGL(canvasGL, { colorFondo: "#a5a5b3" });
-  const ctx2D = canvasBitMap.getContext("2d");
-  const W = canvasGL.width;
-  const H = canvasGL.height;
+  // 1. WebGL
+  const webgl = new ModeloWebGL(canvas, { colorFondo: "#1e1e1e" });
+  const W = canvas.width;
+  const H = canvas.height;
 
-  // Dimensiones del tablero: ocupa 95% del canvas para dejar margen
-  const anchoPx = W * 0.95;
-  const altoPx = H * 0.95;
+  // Parámetros para los 3 tableros
+  // Como es 3D y aplicaremos shear/offset, los tableros serán más pequeños para caber
+  const anchoPx = W * 0.4;
+  const altoPx = H * 0.4;
 
-  // Tamaño de celda en píxeles
-  const anchoCelda = anchoPx / columnas;
-  const altoCelda = altoPx / filas;
-
-  function rasterizarEscena2D(entidades) {
-    ctx2D.fillStyle = "#a5a5b3";
-    ctx2D.fillRect(0, 0, ctx2D.canvas.width, ctx2D.canvas.height);
-    entidades.forEach((ent) => {
-      if (ent.geometria?.figura?.draw2D) {
-        ent.geometria.figura.draw2D(ctx2D);
-      }
-    });
-  }
-
-  // ── 2. ECS Escena ─────────────────────────────────────────────────────────
+  // 2. Escena ECS
   const escena = new Escena();
 
-  // ── 3. Entidad Manager (estado global del juego) ──────────────────────────
-  const managerId = escena.crearEntidad("EstadoJuegoAmoeba");
+  // 3. Manager
+  const managerId = escena.crearEntidad("EstadoJuego3D");
   escena.agregarComponente(
     managerId,
-    new EstadoJuegoComponent({ modoJuego: modo }),
+    new EstadoJuegoComponent({
+      modoJuego: modo,
+    }),
   );
 
-  // ── 4. Grid visual en píxeles — centrado en el canvas ────────────────────
-  const factoryGrid = new GridFactory(escena, {
+  // 4. Tablero 3D (Genera los 3 niveles)
+  const factoryTablero3D = new Tablero3DFactory(escena, {
     filas,
     columnas,
     anchoPx,
     altoPx,
-    color: [0.25, 0.25, 0.38],
+    // Offsets de perspectiva isométrica falsa (desplazamiento en X e Y por nivel)
+    // Nivel 0 (Fondo), Nivel 1 (Medio), Nivel 2 (Frente)
+    offsetNivel: { x: 0, y: -H * 0.3 },
+    opcionesTransformacion: {
+      posicion: { x: W / 2, y: H / 2 + H * 0.3, z: 0.5 },
+      rotacion: { x: -Math.acos(0.5), y: 0, z: Math.PI / 4 }, // X negativo para que la parte superior quede más profunda en Z
+      escalado: { x: 1, y: 1, z: 1 },
+      mat4: true,
+    },
   });
-  // El tablero se posiciona en el centro del canvas (px)
-  factoryGrid.conTransform({posicion: { x: W / 2, y: H / 2, z: 0 }}).conRender("puntos", 2, 0);
-  factoryGrid.construir();
+  factoryTablero3D.construir();
 
-  // ── 5. Cursor de hover (cuadrado relleno amarillo) ────────────────────────
-  const cursorHover = escena.crearEntidad("CursorHover");
-  const gridDDA = escena.obtenerEntidadPorNombre("TableroAmoeba").gridDDA;
+  // 5. Cursor Hover 3D (serán 3 cursores o 1 que salta entre niveles)
+  const cursorHover = escena.crearEntidad("CursorHover3D");
+  //const ctx2D = canvas.getContext("2d"); // Para compatibilidad de Cuadrado, aunque en 3D lo dibujamos directo o ignoramos relleno
 
-  // Cuadrado en px locales (centrado en (0,0)), con tamaño de una celda
+  const anchoCelda = anchoPx / columnas;
+  const altoCelda = altoPx / filas;
+
   const cuadradoCursor = new Cuadrado(
     cursorHover.id,
-    -anchoCelda / 2,
-    -altoCelda / 2,
-    anchoCelda / 2,
-    altoCelda / 2,
-    canvasGL,
-    [1, 0.85, 0.1],
+    (-anchoCelda / 2) * 0.9,
+    (-altoCelda / 2) * 0.9,
+    (anchoCelda / 2) * 0.9,
+    (altoCelda / 2) * 0.9,
+    canvas,
+    [1, 0.85, 0.1], // Amarillo
     "lineaDDA",
     true,
     "frontera",
     [0.1, 0.1, 0.1],
-    ctx2D,
   );
-  cuadradoCursor.render();
   escena.agregarComponente(cursorHover, new GeometriaComponent(cuadradoCursor));
-  rasterizarEscena2D(escena.lista);
+  escena.agregarComponente(cursorHover, new TransformComponent());
+  escena.agregarComponente(cursorHover, new RenderComponent("puntos", 2, 10, false)); // orden 10 = siempre arriba, visible
 
-  // Posición inicial fuera del canvas (invisible), escala 0
-  escena.agregarComponente(
-    cursorHover,
-    new TransformComponent({ posicion: { x: W / 2, y: H / 2, z: 0 } }),
-  );
-  escena.agregarComponente(cursorHover, new RenderComponent("puntos", 8, 5));
-
-  // ── 6. Sistemas ───────────────────────────────────────────────────────────
-  const sistemaEntrada = new SistemaEntradaGrid(
+  // 6. Sistemas
+  const sistemaEntrada = new SistemaEntrada3D(
     escena,
-    canvasGL,
+    canvas,
     filas,
     columnas,
+    3, // 3 niveles
+    factoryTablero3D.obtenerNiveles(),
     cursorHover.id,
   );
-  const sistemaJuego = new SistemaJuegoAmoeba(escena);
+
+  const sistemaJuego = new SistemaJuego3D(escena);
   const sistemaAnim = new SistemaAnimacion(escena);
   const sistemaRender = new SistemaRender(webgl, escena);
 
-  // Inyectar dependencias en SistemaJuegoAmoeba
+  // Inyectar dependencias en SistemaJuego3D
   sistemaJuego.entrada = sistemaEntrada;
   sistemaJuego.estadoId = managerId.id;
   sistemaJuego.uiTurno = spanTurno;
-  sistemaJuego.cursorId = cursorHover;
-  // Dimensiones de celda en píxeles para calcular posición de marcas
-  sistemaJuego.anchoCelda = anchoCelda;
-  sistemaJuego.altoCelda = altoCelda;
-  sistemaJuego.offsetX = W / 2 - anchoPx / 2; // borde izquierdo del tablero en px
-  sistemaJuego.offsetY = H / 2 - altoPx / 2; // borde superior del tablero en px
 
-  // Inyectar lo mismo a SistemaEntradaGrid para que el hover use px
-  sistemaEntrada.offsetX = sistemaJuego.offsetX;
-  sistemaEntrada.offsetY = sistemaJuego.offsetY;
-  sistemaEntrada.anchoCelda = anchoCelda;
-  sistemaEntrada.altoCelda = altoCelda;
+  // Inyectar datos de perspectiva para generar las marcas en el lugar correcto
+  sistemaJuego.anchoCelda = anchoPx / columnas;
+  sistemaJuego.altoCelda = altoPx / filas;
+  sistemaJuego.config3D = factoryTablero3D.obtenerConfig();
+  sistemaJuego.idsNiveles = factoryTablero3D.obtenerNiveles();
+
+  sistemaEntrada.config3D = factoryTablero3D.obtenerConfig();
 
   escena.agregarSistema(sistemaEntrada);
   escena.agregarSistema(sistemaJuego);
   escena.agregarSistema(sistemaAnim);
   escena.agregarSistema(sistemaRender);
 
-  // ── 7. Motor ──────────────────────────────────────────────────────────────
+  // 7. Motor
   motor = new Motor();
   motor.agregarSistema(escena);
   motor.iniciar();
 
-  console.log("[Amoeba] Motor iniciado.");
+  console.log("[3D en Raya] Motor iniciado.");
 }

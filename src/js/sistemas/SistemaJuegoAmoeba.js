@@ -10,7 +10,6 @@ export default class SistemaJuegoAmoeba {
   constructor(escena) {
     this.escena = escena;
 
-    // Obtenemos la entidad manager que guarda el estado
     this.estadoJuego = escena.obtenerEntidadPorNombre("EstadoJuegoAmoeba");
     if (!this.estadoJuego) {
       throw new Error(
@@ -19,9 +18,12 @@ export default class SistemaJuegoAmoeba {
     }
 
     // Variables auxiliares
-    this.tiempoIA = 0; // contador de espera
-    this.delayIA = 1000; // 1 segundo de demora
-    this.iaPensando = false; // flag para saber si la IA está "pensando"
+    this.tiempoIA = 0;
+    this.delayIA = 1000; // ms de espera antes del movimiento de IA
+    this.iaPensando = false;
+
+    // Inyectados desde boundary (coordenadas en píxeles canvas):
+    // anchoCelda, altoCelda, offsetX, offsetY
   }
 
   update(deltaTime) {
@@ -82,33 +84,31 @@ export default class SistemaJuegoAmoeba {
     );
 
     if (entidadCasilla && entidadCasilla.casilla.estado === "vacia") {
-      const turnoActual = estado.turnoActual; // 'jugador1' o 'jugador2'
+      const turnoActual = estado.turnoActual;
       const estadoCasilla = turnoActual === "jugador1" ? "equis" : "cero";
 
       // 1. Marcar casilla como ocupada
       entidadCasilla.casilla.estado = estadoCasilla;
 
-      // 2. Calcular coordenadas NDC del centro de la casilla
-      const colF = this.entrada.columnas;
-      const filF = this.entrada.filas;
-      const x_ndc = -1.0 + (col + 0.5) * (2.0 / colF);
-      const y_ndc = 1.0 - (fila + 0.5) * (2.0 / filF);
-      const size = (2.0 / Math.max(colF, filF)) * 0.35;
+      // 2. Calcular el centro de la casilla en PÍXELES canvas
+      //    offsetX/Y = borde izquierdo/superior del tablero en px
+      //    anchoCelda/altoCelda = tamaño de cada celda en px
+      const cx = (this.offsetX ?? 0) + (col + 0.5) * (this.anchoCelda ?? 30);
+      const cy = (this.offsetY ?? 0) + (fila + 0.5) * (this.altoCelda ?? 30);
+      const size = Math.min(this.anchoCelda ?? 30, this.altoCelda ?? 30) * 0.35;
 
-      // 3. Instanciar la figura visual
+      // 3. Instanciar la figura visual (posición y tamaño en píxeles)
       if (turnoActual === "jugador1") {
         new EquisFactory(this.escena, {
-          x: x_ndc,
-          y: y_ndc,
-          size,
+          posicion: { x: cx, y: cy, z: 0 },
+          tamaño: size,
           color: [1, 0, 0],
         }).construir();
       } else {
         new CeroFactory(this.escena, {
-          x: x_ndc,
-          y: y_ndc,
-          size: size * 1.15,
-          color: [0, 0, 1],
+          posicion: { x: cx, y: cy, z: 0 },
+          tamaño: size,
+          color: [0, 0.3, 1],
         }).construir();
       }
 

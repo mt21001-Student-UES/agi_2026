@@ -52,8 +52,6 @@ export default class Motor {
    * @param {number} tiempoActual Tiempo en milisegundos provisto por requestAnimationFrame
   */
   #bucle(tiempoActual) {
-    //console.log(this.#corriendo);
-    //console.log("bucle ejecutado");
     if (!this.#corriendo) return;
 
     // 1. Calcular deltaTime en segundos

@@ -1,6 +1,7 @@
 import TransformComponent from "./componentes/TransformComponent.js";
-import FisicaComponent    from "./componentes/FisicaComponent.js";
-import RenderComponent    from "./componentes/RenderComponent.js";
+import GeometriaComponent from "./componentes/GeometriaComponent.js";
+import FisicaComponent from "./componentes/FisicaComponent.js";
+import RenderComponent from "./componentes/RenderComponent.js";
 
 /**
  * EntidadFactory — Constructor fluente (Builder) para entidades ECS
@@ -15,6 +16,7 @@ import RenderComponent    from "./componentes/RenderComponent.js";
  *
  * Patrón de uso:
  *   const entidad = new CirculoFactory(escena, { h:0, k:0, r:0.5 })
+ *     .conGeometria(figura)
  *     .conTransform(0.2, -0.1)
  *     .conFisica()
  *     .conRender('puntos', 3)
@@ -29,7 +31,7 @@ export default class EntidadFactory {
    * @param {string} [nombre]  Nombre descriptivo (solo para depuración)
    */
   constructor(escena, nombre = null) {
-    this.#escena  = escena;
+    this.#escena = escena;
     this.#entidad = escena.crearEntidad(nombre);
   }
 
@@ -37,18 +39,23 @@ export default class EntidadFactory {
 
   /**
    * Añade un TransformComponent a la entidad.
-   * @param {number} x
-   * @param {number} y
-   * @param {number} [z=0]
-   * @param {number} [rotacion=0]  En radianes
-   * @param {number} [escala=1]
+   * @param {Object} opciones - Opciones del componente de transformación.
+   * @param {Object} [opciones.posicion] - Posición en el espacio (x, y, z).
+   * @param {number} [opciones.posicion.x=0] - Coordenada X.
+   * @param {number} [opciones.posicion.y=0] - Coordenada Y.
+   * @param {number} [opciones.posicion.z=0] - Coordenada Z.
+   * @param {Object} [opciones.rotacion] - Rotación en el espacio (x, y, z) en radianes.
+   * @param {number} [opciones.rotacion.x=0] - Rotación en el eje X.
+   * @param {number} [opciones.rotacion.y=0] - Rotación en el eje Y.
+   * @param {number} [opciones.rotacion.z=0] - Rotación en el eje Z.
+   * @param {Object} [opciones.escalado] - Escala en el espacio (x, y, z).
+   * @param {number} [opciones.escalado.x=1] - Escala en el eje X.
+   * @param {number} [opciones.escalado.y=1] - Escala en el eje Y.
+   * @param {number} [opciones.escalado.z=1] - Escala en el eje Z.
    * @returns {this}  Para encadenamiento (funciona en subclases también)
    */
-  conTransform(x = 0, y = 0, z = 0, rotacion = 0, escala = 1) {
-    this.#escena.agregarComponente(
-      this.#entidad,
-      new TransformComponent(x, y, z, rotacion, escala)
-    );
+  conTransform(opciones = null) {
+    this.#escena.agregarComponente(this.#entidad, new TransformComponent(opciones));
     return this;
   }
 
@@ -62,7 +69,7 @@ export default class EntidadFactory {
   conFisica(velocidadX = 0, velocidadY = 0, peso = 0) {
     this.#escena.agregarComponente(
       this.#entidad,
-      new FisicaComponent(velocidadX, velocidadY, peso)
+      new FisicaComponent(velocidadX, velocidadY, peso),
     );
     return this;
   }
@@ -74,10 +81,10 @@ export default class EntidadFactory {
    * @param {number} [orden=0]  Mayor orden = se dibuja encima
    * @returns {this}
    */
-  conRender(modo = 'puntos', tamañoPunto = 5, orden = 0) {
+  conRender(modo = "puntos", tamañoPunto = 5, orden = 0) {
     this.#escena.agregarComponente(
       this.#entidad,
-      new RenderComponent(modo, tamañoPunto, orden)
+      new RenderComponent(modo, tamañoPunto, orden),
     );
     return this;
   }
@@ -86,7 +93,7 @@ export default class EntidadFactory {
   conGeometria(figura) {
     this.#escena.agregarComponente(
       this.#entidad,
-      new GeometriaComponent(figura)
+      new GeometriaComponent(figura),
     );
     return this;
   }
